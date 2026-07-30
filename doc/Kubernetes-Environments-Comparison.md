@@ -616,6 +616,29 @@ privileged — full access (only for infra components)
     └─────────────────────────────────────────────────┘
 ```
 
+### Step-by-Step: How Traffic Reaches Your Pods (AWS + EKS)
+
+When a user types `app.example.com` in their browser, here's exactly what happens:
+
+1. **User types `app.example.com`** → DNS query goes to **Route 53**
+2. **Route 53** resolves to CloudFront distribution (or directly to ALB if no CDN)
+3. **CloudFront** (CDN) serves static assets (JS, CSS, images) from edge cache. For dynamic/API requests → forwards to ALB origin
+4. **ALB (Application Load Balancer)** receives the request on port 443 (HTTPS) — this is the entry point into your EKS cluster
+5. **ALB Target Group** routes traffic to **Ingress Controller pods** (Nginx DaemonSet or ALB Controller targeting app pods directly)
+6. **Ingress resource** matches host `app.example.com` + path `/` → routes to the **ClusterIP Service** in app namespace
+7. **ClusterIP Service** load-balances across all healthy **app pods** (3-20 replicas, managed by Deployment + HPA)
+8. **App pod** processes the request (e.g., Django/Node.js on port 8080)
+9. If app needs data → pod connects to **RDS Aurora** (private subnet, SG allows pod CIDR on port 5432)
+10. Response flows back: **Pod → Service → Ingress → ALB → CloudFront → User's browser**
+
+```
+User → Route53 → CloudFront → ALB → Ingress Controller → ClusterIP Service → App Pod → RDS Aurora
+                                                                                   ↓
+                                                             Response flows back the same path
+```
+
+**Mapping to 3-Tier:** Route53 + CloudFront + ALB = **Web Tier** | Pods + Service + HPA = **App Tier** | RDS Aurora = **Data Tier**
+
 ### Production K8s Manifests (Key Objects)
 
 | Object | Tier | Purpose |
