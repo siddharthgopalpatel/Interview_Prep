@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Siddharth Patel — Resume</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      font-size: 9.2pt;
+      color: #1a1a1a;
+      background: #f0f4f9;
+      line-height: 1.45;
+    }
+
+    /* ── SWITCHER BAR (hidden on print) ── */
+    .switcher {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      background: #1a56a0;
+      padding: 10px 20px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      z-index: 999;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+      flex-wrap: wrap;
+    }
+
+    .switcher-label {
+      color: #fff;
+      font-size: 10pt;
+      font-weight: 600;
+      margin-right: 6px;
+      white-space: nowrap;
+    }
+
+    .sw-btn {
+      padding: 6px 16px;
+      border: 2px solid #fff;
+      background: transparent;
+      color: #fff;
+      border-radius: 4px;
+      font-size: 9pt;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s;
+      white-space: nowrap;
+    }
+
+    .sw-btn:hover { background: rgba(255,255,255,0.15); }
+    .sw-btn.active { background: #fff; color: #1a56a0; }
+
+    .print-btn {
+      margin-left: auto;
+      padding: 6px 18px;
+      background: #e8f0fb;
+      color: #1a56a0;
+      border: 2px solid #fff;
+      border-radius: 4px;
+      font-size: 9pt;
+      font-weight: 700;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    .print-btn:hover { background: #fff; }
+
+    /* ── PAGE WRAPPER ── */
+    .page {
+      width: 210mm;
+      min-height: 297mm;
+      margin: 60px auto 30px auto;
+      padding: 10mm 12mm;
+      background: #fff;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.12);
+    }
+
+    /* ── HEADER ── */
+    .header {
+      border-bottom: 2.5px solid #1a56a0;
+      padding-bottom: 7px;
+      margin-bottom: 8px;
+    }
+
+    .header h1 {
+      font-size: 20pt;
+      font-weight: 700;
+      color: #1a56a0;
+      letter-spacing: 0.5px;
+      line-height: 1.1;
+    }
+
+    .header .title {
+      font-size: 10.5pt;
+      color: #444;
+      font-weight: 400;
+      margin-top: 2px;
+    }
+
+    .contact {
+      margin-top: 5px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px 16px;
+      font-size: 8.5pt;
+      color: #333;
+    }
+
+    .contact a { color: #1a56a0; text-decoration: none; }
+    .contact span::before { content: '•'; margin-right: 5px; color: #1a56a0; }
+    .contact span:first-child::before { content: ''; margin-right: 0; }
+
+    /* ── SECTIONS ── */
+    .section { margin-top: 9px; }
+
+    .section-title {
+      font-size: 9.5pt;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1.2px;
+      color: #1a56a0;
+      border-bottom: 1px solid #c5d8f0;
+      padding-bottom: 2px;
+      margin-bottom: 6px;
+    }
+
+    /* ── SUMMARY ── */
+    .summary p {
+      font-size: 9pt;
+      color: #222;
+      line-height: 1.55;
+    }
+
+    /* role-specific summaries — only active one shown */
+    .summary-block { display: none; }
+    .summary-block.active { display: block; }
+
+    /* ── SKILLS ── */
+    .skills-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 3px 20px;
+    }
+
+    .skill-row { font-size: 8.5pt; line-height: 1.5; }
+    .skill-row strong { color: #1a56a0; font-weight: 600; }
+
+    /* ── EXPERIENCE ── */
+    .job { margin-bottom: 8px; }
+
+    .job-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      margin-bottom: 1px;
+    }
+
+    .job-title { font-size: 9.5pt; font-weight: 700; color: #111; }
+    .job-date  { font-size: 8.2pt; color: #555; white-space: nowrap; font-style: italic; }
+    .job-company { font-size: 8.5pt; color: #1a56a0; font-weight: 600; margin-bottom: 3px; }
+    .job-intro { font-size: 8.5pt; color: #444; margin-bottom: 4px; font-style: italic; }
+
+    .sub-section { margin-top: 4px; margin-bottom: 2px; }
+    .sub-title { font-size: 8.5pt; font-weight: 700; color: #333; margin-bottom: 2px; }
+
+    ul { padding-left: 13px; margin: 0; }
+    ul li { font-size: 8.5pt; margin-bottom: 2px; color: #222; line-height: 1.45; }
+    ul li::marker { color: #1a56a0; }
+
+    /* ── TABLES ── */
+    .ach-table, .proj-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 8.3pt;
+    }
+
+    .ach-table th, .proj-table th {
+      background: #1a56a0;
+      color: #fff;
+      padding: 4px 8px;
+      text-align: left;
+      font-weight: 600;
+      font-size: 8pt;
+    }
+
+    .ach-table td, .proj-table td {
+      padding: 3px 8px;
+      border-bottom: 1px solid #e8eef6;
+      vertical-align: top;
+    }
+
+    .ach-table tr:nth-child(even) td,
+    .proj-table tr:nth-child(even) td { background: #f4f8fd; }
+
+    .ach-table .metric { font-weight: 600; color: #1a56a0; }
+    .ach-table .result { font-weight: 700; color: #111; }
+    .proj-table .proj-name { font-weight: 700; color: #111; white-space: nowrap; }
+    .proj-table a { color: #1a56a0; text-decoration: none; font-weight: 600; }
+
+    /* ── CERTS & CONTRIBUTIONS ── */
+    .two-col {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 4px 20px;
+    }
+
+    .cert-item, .contrib-item { font-size: 8.3pt; padding: 2px 0; color: #222; }
+    .cert-item::before, .contrib-item::before { content: '▸ '; color: #1a56a0; font-size: 7pt; }
+    .contrib-item strong { color: #1a56a0; }
+
+    .education { font-size: 8.5pt; color: #333; }
+
+    /* ── PRINT ── */
+    @media print {
+      body { background: #fff; }
+      .switcher { display: none !important; }
+      .page {
+        width: 100%;
+        margin: 0;
+        padding: 8mm 10mm;
+        box-shadow: none;
+      }
+      a { color: #1a56a0 !important; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ══ SWITCHER BAR ══ -->
+<div class="switcher">
+  <span class="switcher-label">Role Type:</span>
+  <button class="sw-btn active" onclick="switchSummary('default')">Default — Senior DevOps</button>
+  <button class="sw-btn" onclick="switchSummary('platform')">Platform Engineer</button>
+  <button class="sw-btn" onclick="switchSummary('devsecops')">DevSecOps Engineer</button>
+  <button class="sw-btn" onclick="switchSummary('aws')">AWS / Cloud Engineer</button>
+  <button class="print-btn" onclick="window.print()">🖨 Print / Save PDF</button>
+</div>
+
+
+<div class="page">
+
+  <!-- ══ HEADER ══ -->
+  <div class="header">
+    <h1>SIDDHARTH PATEL</h1>
+    <div class="title">Senior DevOps &amp; Cloud Infrastructure Engineer</div>
+    <div class="contact">
+      <span>siddharthgopalpatel825@gmail.com</span>
+      <span>+91-7899449988</span>
+      <span>New Delhi, India</span>
+      <span><a href="https://www.linkedin.com/in/siddharth-patel-1b090169/">LinkedIn</a></span>
+      <span><a href="https://github.com/siddharthpatel1993">GitHub</a></span>
+    </div>
+  </div>
+
+  <!-- ══ SUMMARY — 4 VERSIONS ══ -->
+  <div class="section summary">
+    <div class="section-title">Professional Summary</div>
+
+    <!-- Default -->
+    <div class="summary-block active" id="summary-default">
+      <p>Senior DevOps &amp; Cloud Infrastructure Engineer with 10+ years at Ericsson — started as a Linux admin, moved into full cloud and DevOps ownership, and now lead platform engineering for enterprise telecom infrastructure. I've built most of what's on this resume from scratch: multi-account AWS Landing Zones, 18-stage DevSecOps pipelines, Kubernetes platforms across EKS and OpenShift, automated OS patching for 500+ servers, and a multi-region DR setup we actually test quarterly. The numbers are real — 35% cost reduction ($180K/year), SOC2 passed on first attempt, disaster recovery RTO under 3 minutes, MTTR cut from 2 hours to under 5 minutes. I'm drawn to the hard problems: making DR actually work when it counts, getting security into pipelines without slowing teams down, and turning a 2 AM incident into a 5-minute auto-recovery.</p>
+    </div>
+
+    <!-- Platform Engineer -->
+    <div class="summary-block" id="summary-platform">
+      <p>Senior DevOps &amp; Cloud Infrastructure Engineer with 10+ years at Ericsson, specialising in platform engineering — building internal developer platforms, golden paths, and self-service infrastructure that lets teams ship without worrying about the underlying stack. I've standardised Kubernetes delivery across EKS, OpenShift, and self-managed clusters using Helm and Kustomize, built reusable Terraform module libraries for multi-account AWS environments, and designed 18-stage CI/CD pipelines that teams adopt without friction. The numbers: 15+ microservices on a single governed platform, 500+ servers patched monthly with zero downtime, deployment blast radius cut from 100% to 5%. I care about reducing cognitive load on developers — the best infrastructure is the kind they never have to think about.</p>
+    </div>
+
+    <!-- DevSecOps -->
+    <div class="summary-block" id="summary-devsecops">
+      <p>Senior DevOps Engineer with 10+ years at Ericsson, specialising in DevSecOps — embedding security at every stage of the SDLC without slowing delivery teams down. Built 18-stage pipelines with 6 security layers (secret scanning, SCA, SAST, container scanning, image signing, DAST), achieved SOC2 on first attempt, and implemented zero-trust Kubernetes platforms with mTLS (Istio), RBAC, Pod Security Standards, and supply chain controls (Cosign + Kyverno). Architected 15-account Landing Zones with SCPs, centralised GuardDuty/Security Hub, and OIDC federation — no long-lived credentials anywhere. The security work is real and tested: deployment blast radius reduced from 100% to 5%, automated CIS violation remediation in 90 seconds, zero IaC misconfigurations reaching production.</p>
+    </div>
+
+    <!-- AWS / Cloud -->
+    <div class="summary-block" id="summary-aws">
+      <p>Senior Cloud Infrastructure Engineer with 10+ years at Ericsson, specialising in AWS — designed multi-account Landing Zones (15 accounts, 5 OUs, SCPs, IAM Identity Center), 3-tier production architecture handling 5,000 req/s (VPC, CloudFront+WAF+ALB, EC2 ASG, Aurora Multi-AZ), and multi-region DR with 3-minute RTO and sub-second RPO (Route53 failover, Aurora Global, S3 CRR). Built serverless automation (EventBridge, Lambda, DynamoDB, SQS, SNS) and FinOps platforms that cut AWS spend by 35% ($180K/year). Everything provisioned via Terraform modules with separate state per account, CI-driven plan/apply, and drift detection. Deep across the AWS stack: compute, networking, database, security, serverless, and cost governance.</p>
+    </div>
+  </div>
+
+  <!-- ══ SKILLS ══ -->
+  <div class="section">
+    <div class="section-title">Technical Skills</div>
+    <div class="skills-grid">
+      <div class="skill-row"><strong>Cloud – AWS:</strong> VPC, EC2 ASG, ALB/NLB, EKS, RDS Aurora, ElastiCache, Lambda, API Gateway, EventBridge, SQS, SNS, DynamoDB, S3, ECR, CloudFront, WAF, Route53, ACM, KMS, Secrets Manager, IAM, IAM Identity Center, Organizations, Control Tower, SCPs, GuardDuty, Security Hub, AWS Config, Inspector, CloudTrail, CloudWatch, Cost Explorer, Compute Optimizer, AWS Budgets, Aurora Global Database, S3 CRR, VPC Endpoints, AWS FIS</div>
+      <div class="skill-row"><strong>Infrastructure as Code:</strong> Terraform (modules, remote state, workspaces, tfsec, Checkov, OPA/Conftest, Infracost), Ansible (AAP, roles, vault), CloudFormation</div>
+      <div class="skill-row"><strong>Containers &amp; Kubernetes:</strong> Kubernetes (EKS, self-managed, OpenShift), Docker, Helm, Kustomize, Karpenter, Argo Rollouts, Istio Service Mesh</div>
+      <div class="skill-row"><strong>CI/CD &amp; GitOps:</strong> Jenkins, ArgoCD, GitHub Actions, GitLab CI, Cosign, Kyverno</div>
+      <div class="skill-row"><strong>Security &amp; Compliance:</strong> DevSecOps, Trivy, Snyk, SonarQube, OWASP ZAP, mTLS (Istio), Vault, CIS Benchmarks, NIST, ISO 27001, Pod Security Standards, RBAC</div>
+      <div class="skill-row"><strong>Monitoring &amp; Observability:</strong> Prometheus, Grafana, AlertManager, CloudWatch, EFK/ELK, Jaeger, Kubecost, X-Ray, AppDynamics</div>
+      <div class="skill-row"><strong>Networking:</strong> VPC design, Subnets, NAT Gateway, Transit Gateway, VPN, Security Groups, NACLs, NetworkPolicies, Calico</div>
+      <div class="skill-row"><strong>Scripting &amp; Languages:</strong> Python, Bash, PowerShell, Groovy (Jenkinsfile), HCL (Terraform), YAML</div>
+      <div class="skill-row"><strong>Practices:</strong> Platform Engineering, DevSecOps, GitOps, FinOps, SRE, ITIL, Zero-Trust, Canary Deployments, Policy-as-Code</div>
+    </div>
+  </div>
+
+
+  <!-- ══ EXPERIENCE ══ -->
+  <div class="section">
+    <div class="section-title">Professional Experience</div>
+
+    <!-- Ericsson Noida -->
+    <div class="job">
+      <div class="job-header">
+        <span class="job-title">Senior DevOps Engineer</span>
+        <span class="job-date">June 2025 – Present</span>
+      </div>
+      <div class="job-company">Ericsson Global India Pvt. Ltd. &mdash; Noida, India</div>
+      <div class="job-intro">Led platform engineering across 10+ person cross-functional team — infrastructure automation, security-first CI/CD, and self-healing systems for enterprise telecom platform.</div>
+      <div class="sub-section">
+        <div class="sub-title">Infrastructure &amp; Automation (Terraform + AWS)</div>
+        <ul>
+          <li>Built production 3-tier AWS infrastructure (VPC, 3 AZs, CloudFront + WAF + ALB, EC2 ASG, Aurora Multi-AZ, ElastiCache) with Terraform modules — handles 5,000 req/s, auto-scales 3→20 instances, &lt;30s DB failover</li>
+          <li>Implemented IaC security scanning (tfsec + Checkov + OPA) in CI — zero misconfigurations reach production; Infracost shows cost impact on every PR</li>
+        </ul>
+      </div>
+      <div class="sub-section">
+        <div class="sub-title">Kubernetes &amp; Helm</div>
+        <ul>
+          <li>Operated K8s across 3 environments (self-managed, EKS, OpenShift) serving 15+ production microservices with standardised Helm chart deployments and environment-specific value overrides</li>
+          <li>Karpenter autoscaling with Spot optimisation — 60-70% node cost reduction; bin-packing consolidation eliminates half-empty nodes</li>
+        </ul>
+      </div>
+      <div class="sub-section">
+        <div class="sub-title">Security &amp; DevSecOps</div>
+        <ul>
+          <li>Designed 18-stage DevSecOps pipeline (Jenkins + ArgoCD + Argo Rollouts) with 6 security layers: secret scan → SCA → SAST → Trivy image scan → Cosign signing → DAST (OWASP ZAP) — blast radius reduced 100% → 5%</li>
+          <li>Supply chain security: Cosign + Kyverno admission control — only signed, scanned images from ECR run in production (SOC2 passed first attempt)</li>
+          <li>Enforced CIS/NIST-aligned policies: Pod Security Standards (restricted), NetworkPolicies (default-deny), mTLS (Istio), RBAC least-privilege; secrets via AWS Secrets Manager + KMS</li>
+        </ul>
+      </div>
+      <div class="sub-section">
+        <div class="sub-title">Monitoring &amp; Incident Response</div>
+        <ul>
+          <li>Deployed Prometheus + Grafana + AlertManager + EFK with ServiceMonitor auto-discovery; structured alerting (P1→PagerDuty, P2→Slack, P3→Jira)</li>
+          <li>Istio service mesh + Jaeger distributed tracing across 15 microservices — MTTR reduced from 2+ hours to &lt;5 minutes</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Ericsson Dallas -->
+    <div class="job">
+      <div class="job-header">
+        <span class="job-title">DevOps Engineer</span>
+        <span class="job-date">Dec 2018 – June 2025</span>
+      </div>
+      <div class="job-company">Ericsson Inc. &mdash; Dallas, US</div>
+      <div class="job-intro">End-to-end ownership of cloud infrastructure, platform architecture, and DevOps toolchain across AWS for enterprise-scale product delivery teams.</div>
+      <div class="sub-section">
+        <div class="sub-title">Multi-Account AWS Landing Zone</div>
+        <ul>
+          <li>Architected 15-account AWS Landing Zone (5 OUs) with Terraform: SCPs, IAM Identity Center SSO, OIDC federation for CI/CD — account provisioning reduced from 2 weeks → 30 minutes</li>
+          <li>Centralised security: GuardDuty + Security Hub + AWS Config + CloudTrail across all accounts; immutable log archive; SOC2/ISO27001 compliant</li>
+        </ul>
+      </div>
+      <div class="sub-section">
+        <div class="sub-title">Multi-Region HA &amp; Disaster Recovery</div>
+        <ul>
+          <li>Designed multi-region active-passive DR (Route53 health-check failover + Aurora Global Database + S3 CRR) — measured RTO: 3 minutes, RPO: &lt;1 second; quarterly drills with AWS FIS chaos experiments</li>
+        </ul>
+      </div>
+      <div class="sub-section">
+        <div class="sub-title">Serverless &amp; Event-Driven Automation</div>
+        <ul>
+          <li>Built serverless security remediation engine (EventBridge + SQS + Lambda + DynamoDB + SNS) — auto-fixes AWS Config violations in 90 seconds; full DynamoDB audit trail; API Gateway compliance dashboard</li>
+        </ul>
+      </div>
+      <div class="sub-section">
+        <div class="sub-title">FinOps — Cloud Cost Optimisation</div>
+        <ul>
+          <li>Reduced AWS spend 35% ($180K/year): non-prod auto-stop (Lambda + EventBridge), Karpenter consolidation, VPA rightsizing, VPC Endpoints, Savings Plans, GP2→GP3, S3 lifecycle policies</li>
+          <li>Kubecost per-namespace chargeback; mandatory tagging via SCPs; Cost Explorer + Compute Optimizer + AWS Budgets governance</li>
+        </ul>
+      </div>
+      <div class="sub-section">
+        <div class="sub-title">Terraform Module Library</div>
+        <ul>
+          <li>Built reusable Terraform module library (VPC, EKS, RDS, IAM, ALB) for multi-region, multi-account deployments — CI/CD-driven plan/apply with separate state per account; drift detection via scheduled plans</li>
+        </ul>
+      </div>
+      <div class="sub-section">
+        <div class="sub-title">OS Patching Automation</div>
+        <ul>
+          <li>Built enterprise OS patching automation (18-step lifecycle, 7-dimension validation, auto-rollback) on Ansible Automation Platform — 500+ RHEL servers/month, zero downtime, full ServiceNow ITIL CR lifecycle</li>
+          <li>12 production-grade idempotent Ansible roles; multi-system monitoring silence (Alertmanager + CloudWatch + PagerDuty) with auto-expire; AES-256 Vault for all credentials</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Ericsson Bangalore -->
+    <div class="job">
+      <div class="job-header">
+        <span class="job-title">System / Linux Administrator</span>
+        <span class="job-date">Aug 2015 – Dec 2018</span>
+      </div>
+      <div class="job-company">Ericsson Global India Pvt. Ltd. &mdash; Bangalore, India</div>
+      <ul>
+        <li>Administered 100+ Linux servers (RHEL/CentOS) — CIS hardening, patching, performance tuning, capacity planning</li>
+        <li>Automated operations with Bash/Python/Ansible — reduced manual SSH by 80%; built and maintained Jenkins CI/CD for 20+ services</li>
+        <li>Implemented monitoring (Nagios → Prometheus) and centralised logging (ELK) — first cross-environment observability platform</li>
+        <li>Managed backup strategies, DR runbooks, and incident response for production infrastructure</li>
+      </ul>
+    </div>
+  </div>
+
+
+  <!-- ══ KEY ACHIEVEMENTS ══ -->
+  <div class="section">
+    <div class="section-title">Key Achievements</div>
+    <table class="ach-table">
+      <thead>
+        <tr>
+          <th style="width:28%">Metric</th>
+          <th style="width:20%">Result</th>
+          <th>How</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td class="metric">Deployment blast radius</td><td class="result">100% → 5%</td><td>18-stage pipeline + Prometheus canary auto-rollback</td></tr>
+        <tr><td class="metric">IaC misconfigs in production</td><td class="result">Zero</td><td>tfsec + Checkov + OPA integrated in Terraform CI</td></tr>
+        <tr><td class="metric">Cloud cost reduction</td><td class="result">35% ($180K/yr)</td><td>FinOps automation: auto-stop, Karpenter, rightsizing, Savings Plans</td></tr>
+        <tr><td class="metric">Disaster recovery RTO</td><td class="result">&lt;3 minutes</td><td>Multi-region active-passive, Aurora Global, quarterly validated</td></tr>
+        <tr><td class="metric">OS patching at scale</td><td class="result">500+ servers/month</td><td>18-step AAP automation, 7-dimension validation, ITIL, zero downtime</td></tr>
+        <tr><td class="metric">MTTR improvement</td><td class="result">2 hrs → &lt;5 min</td><td>Istio + Jaeger distributed tracing across 15 microservices</td></tr>
+        <tr><td class="metric">SOC2 audit</td><td class="result">Passed — 1st attempt</td><td>Landing Zone: SCPs, OIDC, centralised logging, automated compliance</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- ══ KEY PROJECTS ══ -->
+  <div class="section">
+    <div class="section-title">Key Projects</div>
+    <table class="proj-table">
+      <thead>
+        <tr>
+          <th style="width:30%">Project</th>
+          <th>Highlights</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="proj-name">DevSecOps CI/CD Pipeline<br><a href="https://github.com/siddharthpatel1993/dcp_devsecops">github.com/siddharthpatel1993</a></td>
+          <td>18 stages, 6 security layers (secret→SCA→SAST→Trivy→Cosign→DAST), canary auto-rollback in 2 min, 900MB→150MB image, GitOps (ArgoCD)</td>
+        </tr>
+        <tr>
+          <td class="proj-name">3-Tier AWS Architecture</td>
+          <td>VPC (9 subnets, 3 AZs), CloudFront+WAF+ALB, EC2 ASG (3→20), Aurora Multi-AZ, ElastiCache, Terraform modules, 5,000 req/s</td>
+        </tr>
+        <tr>
+          <td class="proj-name">Kubernetes Platform (EKS)</td>
+          <td>EKS + OpenShift + self-managed, Helm, Karpenter, Argo Rollouts, Istio mTLS, Kyverno, Kubecost, 15+ microservices</td>
+        </tr>
+        <tr>
+          <td class="proj-name">Multi-Account Landing Zone</td>
+          <td>15 accounts, 5 OUs, SCPs, IAM Identity Center, OIDC, GuardDuty, Security Hub, AWS Config, CloudTrail, vending &lt;30 min</td>
+        </tr>
+        <tr>
+          <td class="proj-name">Serverless Remediation Engine</td>
+          <td>EventBridge→SQS→Lambda→DynamoDB→SNS, auto-fix CIS violations in 90s, API Gateway dashboard, $0.07/month</td>
+        </tr>
+        <tr>
+          <td class="proj-name">Service Mesh (Istio)</td>
+          <td>mTLS STRICT, AuthorizationPolicies (zero-trust), VirtualService canary, Jaeger tracing, Kiali topology, circuit breakers</td>
+        </tr>
+        <tr>
+          <td class="proj-name">FinOps Platform</td>
+          <td>35% cost reduction, non-prod auto-stop (Lambda), Karpenter consolidation, VPA, Infracost on PRs, Kubecost chargeback</td>
+        </tr>
+        <tr>
+          <td class="proj-name">Multi-Region HA &amp; DR</td>
+          <td>Route53 failover, Aurora Global (&lt;1s RPO), S3 CRR, warm pools, AWS FIS chaos drills, RTO &lt;3 min, quarterly validated</td>
+        </tr>
+        <tr>
+          <td class="proj-name">OS Patching Automation<br><a href="https://gitlab.com/patelsiddharthnids993/ansible_os_automation">gitlab.com/patelsiddharthnids993</a></td>
+          <td>18-step lifecycle, 7-dimension validation, auto-rollback, ServiceNow ITIL, 500+ RHEL/month, AAP, 12 Ansible roles</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- ══ CERTIFICATIONS + CONTRIBUTIONS ══ -->
+  <div class="section">
+    <div class="section-title">Certifications &amp; Contributions</div>
+    <div class="two-col">
+      <div>
+        <div class="cert-item">CKA — Certified Kubernetes Administrator (Linux Foundation)</div>
+        <div class="cert-item">CKAD — Certified Kubernetes Application Developer (Linux Foundation)</div>
+        <div class="cert-item">AWS Solutions Architect – Associate (Amazon Web Services)</div>
+        <div class="cert-item">Certified SAFe® 5 DevOps Practitioner (Scaled Agile)</div>
+      </div>
+      <div>
+        <div class="contrib-item"><strong>Awards:</strong> Delivery Champion — Kubernetes 2022 | MANA ADM Champion — DevSecOps 2023-2024</div>
+        <div class="contrib-item"><strong>Knowledge Sharing:</strong> Internal tech talks on DevSecOps, K8s platform design, Terraform, security automation</div>
+        <div class="contrib-item"><strong>Mentoring:</strong> Guided junior engineers through CKA certification and Ansible/Terraform adoption</div>
+        <div class="contrib-item"><strong>Open Source:</strong> 3 public repositories — CI/CD pipelines, Ansible automation, K8s infrastructure</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ EDUCATION ══ -->
+  <div class="section">
+    <div class="section-title">Education</div>
+    <div class="education">Bachelor of Engineering (Computer Science / IT) — KIIT University, 2015</div>
+  </div>
+
+</div><!-- end .page -->
+
+<!-- ══ JAVASCRIPT SWITCHER ══ -->
+<script>
+  function switchSummary(role) {
+    // Hide all summaries
+    document.querySelectorAll('.summary-block').forEach(el => el.classList.remove('active'));
+    // Show selected
+    document.getElementById('summary-' + role).classList.add('active');
+    // Update button states
+    document.querySelectorAll('.sw-btn').forEach(btn => btn.classList.remove('active'));
+    event.target.classList.add('active');
+  }
+</script>
+
+</body>
+</html>
