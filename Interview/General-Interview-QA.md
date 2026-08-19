@@ -3,10 +3,10 @@
 ## Candidate Context
 - **Name:** Siddharth Patel
 - **Employer:** Ericsson (entire career — 10+ years)
-- **Customer:** Verizon Inc — IP Contact Center platform
-- **Domain:** Carrier-grade telecom, contact center, VoIP
-- **Platform:** 500+ RHEL servers, 99.99% SLA, millions of calls daily
-- **Rule:** Mention Verizon ONCE in intro, then use "the platform" / "production environment" after that
+- **Career Arc:** Linux Admin (2015–2018) → DevOps Engineer (2018–2025) → DevSecOps Engineer (2025–Present)
+- **DevOps Phase:** CI/CD pipelines, 3-tier architecture (VMs + Containers), OS Patch Automation, Serverless, Kubernetes
+- **DevSecOps Phase:** DevSecOps pipeline, Multi-Account Landing Zone, Cost Optimization
+- **Awards/Certs:** Delivery Champion (Kubernetes), CKA, CKAD, AWS SAA, SAFe DevOps
 
 ---
 ---
@@ -33,7 +33,7 @@
 
 **Answer:**
 
-> "I'm Siddharth Patel, Senior DevOps & Cloud Engineer with 10+ years of experience at Ericsson. My primary engagement has been with Verizon as the customer — managing their IP Contact Center platform, carrier-grade infrastructure handling millions of calls daily. Currently I lead platform engineering initiatives — Terraform, Kubernetes, CI/CD pipelines, and DevSecOps practices for enterprise telecom systems."
+> "I'm Siddharth Patel, a DevSecOps Engineer at Ericsson with about 10 years of experience. I started as a Linux Admin, spent 7 years as a DevOps Engineer building CI/CD pipelines, 3-tier architectures, container platforms, and OS patching automation — earned CKA, CKAD, and AWS Solutions Architect along the way. Currently I own our DevSecOps pipeline, multi-account AWS Landing Zone, and cloud cost optimization — the security and governance layer for the platform."
 
 ---
 
@@ -43,13 +43,13 @@
 
 **Answer:**
 
-> "Siddharth Patel, 10+ years at Ericsson in DevOps and Cloud. My primary customer has been Verizon — their IP Contact Center platform requiring 99.99% uptime SLAs.
+> "Siddharth Patel, 10 years at Ericsson. Started as a Linux Admin managing RHEL servers — patching, troubleshooting, monitoring. Then 7 years as a DevOps Engineer where I handled CI/CD pipelines with Jenkins and ArgoCD, built 3-tier AWS architectures for VMs and containers, automated OS patching for 500+ servers with zero downtime, and managed serverless workloads. During that phase I got certified — CKA, CKAD, AWS Solutions Architect, SAFe DevOps — and was recognized as Delivery Champion for Kubernetes.
 >
-> **Day-to-day:** I design and maintain infrastructure using Terraform modules, operate Kubernetes clusters (EKS and self-managed), manage CI/CD pipelines with Jenkins and ArgoCD, handle production incident response, and drive automation for the platform.
+> Currently I'm a DevSecOps Engineer. Day-to-day I own three things: our 18-stage DevSecOps pipeline with 6 security gates, a 15-account multi-account AWS Landing Zone with SCPs and centralized compliance, and cloud cost optimization — which has saved $180K a year so far.
 >
-> **Tech stack:** AWS (VPC, EKS, Lambda, Organizations), Terraform, Ansible, Kubernetes, Docker, Prometheus/Grafana, Istio service mesh.
+> **Tech stack:** AWS (EKS, Lambda, Organizations, Security Hub), Terraform, Ansible, Kubernetes, Docker, Jenkins, ArgoCD, Prometheus/Grafana, Istio.
 >
-> I started as a Linux/System Admin managing 500+ RHEL servers, so I have deep OS-level understanding — networking, kernel, troubleshooting — which helps immensely when building and debugging production systems at scale."
+> The Linux foundation still helps daily — when a container is OOMKilled or a network policy isn't working, I debug at the kernel level, not just the YAML level."
 
 ---
 
@@ -59,17 +59,15 @@
 
 **Answer:**
 
-> "Siddharth Patel, Senior DevOps & Cloud Engineer. I've been with Ericsson throughout my career — 10+ years. My primary customer engagement has been Verizon's IP Contact Center — a carrier-grade platform with strict SLAs for voice quality and availability.
+> "Siddharth Patel, DevSecOps Engineer at Ericsson with 10 years of experience. I've grown through three distinct phases here.
 >
-> **Career journey:** Started as Linux System Admin in Bangalore — 100+ RHEL servers, manual operations. Moved to DevOps at Ericsson US for 7 years — that's where I built the automation, CI/CD, and cloud architecture for the contact center platform. Now back in India leading platform engineering.
+> **Phase 1 — Linux Admin (2015–2018, Bangalore):** Managed 100+ RHEL servers. Patching, monitoring, troubleshooting, capacity planning. This is where I built the deep OS-level understanding. But I kept automating repetitive work with Bash and Ansible — reduced manual SSH by 80% — and that pulled me into DevOps.
 >
-> **Key projects:**
-> 1. **DevSecOps Pipeline** — 18-stage CI/CD with 6 security layers, canary deployments. Reduced deployment failures by 95%.
-> 2. **OS Patching Automation** — Zero-touch patching for 500+ servers, zero downtime, ITIL-integrated.
-> 3. **Multi-Region DR** — 3-minute RTO, <1-second RPO with Route53 failover and Aurora Global DB.
-> 4. **Cost Optimization** — Saved $180K/year through FinOps automation.
+> **Phase 2 — DevOps Engineer (2018–2025):** This is where I built most of the platform from scratch. CI/CD pipelines with Jenkins and ArgoCD. 3-tier AWS architectures handling VMs and containers — 5,000 req/s with auto-scaling. OS patching automation across 500+ servers with zero downtime using Ansible Automation Platform. Serverless event-driven workloads on Lambda. Kubernetes across EKS, OpenShift, and self-managed clusters running 15+ microservices. During this time I earned CKA, CKAD, AWS Solutions Architect, SAFe DevOps, and was awarded Delivery Champion for Kubernetes.
 >
-> Common thread: I take manual, risky processes and make them automated, secure, and self-healing."
+> **Phase 3 — DevSecOps Engineer (2025–Present):** Now I own three pillars. First, the DevSecOps pipeline — 18 stages with 6 security layers from secret scanning through DAST, canary deployments with auto-rollback, blast radius reduced from 100% to 5%. Second, multi-account AWS Landing Zone — 15 accounts, 5 OUs, SCPs, centralized compliance with GuardDuty, Security Hub, Config — SOC2 passed first attempt. Third, cost optimization — FinOps automation that saved $180K a year through auto-stop, Karpenter consolidation, rightsizing, and Savings Plans.
+>
+> Common thread across all three phases: I take manual, risky processes and make them automated, secure, and self-healing. That's what I want to keep doing at scale."
 
 ---
 
