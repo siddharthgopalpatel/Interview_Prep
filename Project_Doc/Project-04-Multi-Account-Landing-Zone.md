@@ -312,7 +312,7 @@ Every account → CloudTrail → Organization Trail → S3 in Log Archive Accoun
 
 ### What is it?
 
-New team needs an AWS account? They don't file a ticket and wait 2 weeks. They request via self-service — account is created with full baseline in <30 minutes.
+New team needs an AWS account? They don't file a ticket and wait 2 weeks. They request via **JIRA** — account is created with full baseline in **<30 minutes**.
 
 ### What Gets Auto-Applied to Every New Account
 
@@ -327,19 +327,235 @@ New team needs an AWS account? They don't file a ticket and wait 2 weeks. They r
 9. SSO permission sets assigned
 10. Budget alarm ($500 default)
 
-### Flow
+---
+
+### How Control Tower & Account Vending Work Together
+
+**Simple Analogy:**
+- **Control Tower** = The builder who sets up roads, sewage, electricity rules for the entire colony
+- **Landing Zone** = The colony itself (with all infrastructure ready)
+- **Account Vending** = When a new family wants a house, they fill a JIRA form → house is built with all connections pre-done
+
+---
+
+### Step-by-Step: Control Tower Setup (One-Time Foundation)
+
+#### Step A: Enable AWS Control Tower
+
+**What you do:**
+- Log into AWS Management Account → Go to **AWS Control Tower** → Click **"Set up Landing Zone"**
+
+**What happens automatically:**
+```
+Control Tower creates:
+  ├── Organization (if not already there)
+  ├── Security OU
+  │     ├── Log Archive Account (all CloudTrail logs go here)
+  │     └── Audit Account (security team access)
+  ├── Sandbox OU (for experimentation)
+  └── Guardrails (preventive + detective rules)
+```
+
+#### Step B: Create Organizational Units (OUs)
+
+In Control Tower → **Organization** → Create OUs:
+```
+Root
+├── Security OU          (auto-created by Control Tower)
+├── Sandbox OU           (auto-created by Control Tower)
+├── Infrastructure OU    (you create — for shared services)
+├── Workloads OU         (you create — for app teams)
+│     ├── Dev
+│     ├── Staging
+│     └── Prod
+└── Suspended OU         (you create — for decommissioned accounts)
+```
+
+#### Step C: Apply Guardrails (Rules)
+
+Control Tower → **Guardrails** → Enable per OU:
+
+| Type | What it does | Example |
+|------|-------------|---------|
+| **Preventive** (SCP) | Blocks actions completely | "No one can delete CloudTrail" |
+| **Detective** (Config Rules) | Detects violations & alerts | "Alert if S3 bucket is public" |
+
+Example:
+```
+Prod OU:
+  ✓ Disallow internet gateways in VPC (preventive)
+  ✓ Disallow public S3 buckets (preventive)
+  ✓ Detect MFA not enabled on root (detective)
+
+Sandbox OU:
+  ✓ Only detective guardrails (let devs experiment)
+  ✓ Budget limit guardrail ($200/month)
+```
+
+#### Step D: Configure Account Factory
+
+Control Tower → **Account Factory** → Configure baseline:
+```
+Account Factory Settings:
+  ├── VPC Configuration
+  │     ├── CIDR range (e.g., 10.x.0.0/16 from IPAM)
+  │     ├── Subnets (public, private, isolated)
+  │     └── Regions allowed
+  ├── IAM Roles
+  │     ├── AWSControlTowerExecution
+  │     └── OrganizationAccountAccessRole
+  └── SSO Configuration
+        └── Which permission sets to auto-assign
+```
+
+#### Step E: Enhance with Terraform/StackSets
+
+Control Tower gives basics. You add more:
+```
+Additional Baseline (applied via StackSets or Terraform):
+  ├── Transit Gateway attachment → connect to shared VPC
+  ├── GuardDuty enrollment → security monitoring
+  ├── Security Hub registration → compliance dashboard
+  ├── Budget alarm → $500 default alert
+  ├── IAM roles → deploy-role, read-only-role, break-glass-role
+  └── Config rules → additional compliance checks
+```
+
+---
+
+### Account Vending Flow (JIRA-Based)
 
 ```
-Team Lead → Requests via ServiceNow/Jira
-    → Approved by Platform Team
-    → Control Tower Account Factory / Terraform triggered
-    → New account created in correct OU
-    → Baseline applied automatically (Terraform + StackSets)
-    → SSO access provisioned
-    → Team notified: "Your account is ready"
-    
-Time: < 30 minutes (automated)
+┌──────────────────────────────────────────────────────────────────────┐
+│                    ACCOUNT VENDING FLOW                               │
+│                                                                      │
+│  ┌─────────┐    ┌──────────┐    ┌──────────┐    ┌───────────────┐   │
+│  │  Team   │    │  JIRA    │    │ Platform │    │  Automation   │   │
+│  │  Lead   │    │  Ticket  │    │  Team    │    │  Pipeline     │   │
+│  └────┬────┘    └────┬─────┘    └────┬─────┘    └───────┬───────┘   │
+│       │              │               │                   │           │
+│       │  Creates     │               │                   │           │
+│       │─────────────>│               │                   │           │
+│       │              │   Notified    │                   │           │
+│       │              │──────────────>│                   │           │
+│       │              │               │                   │           │
+│       │              │   Approves    │                   │           │
+│       │              │<──────────────│                   │           │
+│       │              │               │                   │           │
+│       │              │         Webhook fires             │           │
+│       │              │──────────────────────────────────>│           │
+│       │              │               │                   │           │
+│       │              │               │      Runs Control Tower       │
+│       │              │               │      Account Factory +        │
+│       │              │               │      Terraform baseline       │
+│       │              │               │                   │           │
+│       │              │  Ticket updated: "Account Ready"  │           │
+│       │              │<──────────────────────────────────│           │
+│       │  Notified    │               │                   │           │
+│       │<─────────────│               │                   │           │
+│       │              │               │                   │           │
+│  ┌────┴────┐                                                        │
+│  │ Logs in │                                                        │
+│  │ via SSO │                                                        │
+│  └─────────┘                                                        │
+└──────────────────────────────────────────────────────────────────────┘
 ```
+
+### Detailed Steps
+
+| # | Who | Does What |
+|---|-----|-----------|
+| 1 | Team Lead | Creates JIRA ticket (Project: PLATFORM, Type: "New Account Request") |
+| 2 | JIRA | Captures fields: Team name, Environment, Cost Center, Business Justification |
+| 3 | JIRA | Sends notification to Platform Team |
+| 4 | Platform Team | Reviews → clicks **"Approve"** (JIRA workflow transition) |
+| 5 | JIRA Webhook | Fires on approval → hits API Gateway / Lambda |
+| 6 | Lambda/Step Functions | Calls Control Tower Account Factory API (`CreateManagedAccount`) |
+| 7 | Control Tower | Creates account in correct OU, applies guardrails |
+| 8 | Terraform/StackSets | Applies full baseline (VPC, TGW, IAM, monitoring) |
+| 9 | SSO | Permission sets assigned to requesting team |
+| 10 | Automation | Updates JIRA ticket with Account ID, status → "Done" |
+| 11 | Team Lead | Gets notification, logs in via SSO, starts working |
+
+### Integration Glue (JIRA → AWS)
+
+The automation bridge between JIRA approval and account creation:
+
+- **JIRA Webhook → API Gateway → Lambda** — kicks off Step Functions or Terraform
+- **JIRA Webhook → Jenkins pipeline** — runs Terraform/Account Factory
+- **Atlassian Automation rule** — calls external REST endpoint on status change
+
+### Why JIRA (Not Git)?
+
+| Aspect | JIRA Approach |
+|--------|---------------|
+| **Audience** | Non-technical team leads can raise requests easily |
+| **Approval** | Built-in workflow transitions (Approve/Reject) |
+| **Audit trail** | Full history — who requested, who approved, when |
+| **Integration** | Webhooks or Atlassian Automation trigger downstream pipelines |
+| **Visibility** | Dashboards show pending/completed requests across org |
+
+---
+
+### Real-World Example
+
+```
+Company: "ShopEasy" (e-commerce platform)
+
+Scenario: The Payments team needs a new Prod account.
+
+1. Ravi (Payments Team Lead) → Creates JIRA ticket:
+     Project: PLATFORM
+     Type: Account Request
+     Fields:
+       - Team: Payments
+       - Environment: Production
+       - OU: Workloads/Prod
+       - Cost Center: CC-4501
+       - Business Justification: "New payment gateway service"
+
+2. Platform Team (Priya) sees ticket → Reviews → Clicks "Approve"
+
+3. Behind the scenes (automated, <30 min):
+     ✓ Account 444455556666 created
+     ✓ Placed in Workloads/Prod OU
+     ✓ VPC 10.45.0.0/16 assigned (from IPAM)
+     ✓ Transit Gateway attached
+     ✓ CloudTrail → Log Archive
+     ✓ GuardDuty enabled
+     ✓ Prod SCPs applied (no internet gateway, no public S3)
+     ✓ IAM roles created
+     ✓ SSO: Payments team gets Developer access
+     ✓ Budget alarm set: $500
+
+4. JIRA ticket updated:
+     Account ID: 444455556666
+     Status: "Done"
+     Comment: "Account ready. Login via SSO."
+
+5. Ravi logs in via SSO → starts deploying payment service
+
+Total time: < 30 minutes
+```
+
+---
+
+### Summary: How It All Fits Together
+
+```
+┌────────────────────────────────────────────────────┐
+│           CONTROL TOWER = Foundation               │
+│  (OUs + Guardrails + Account Factory + SSO)        │
+├────────────────────────────────────────────────────┤
+│           LANDING ZONE = What it builds            │
+│  (Multi-account structure with security baseline)  │
+├────────────────────────────────────────────────────┤
+│           ACCOUNT VENDING = Self-service layer     │
+│  (JIRA → Automation → Account Factory → Done)     │
+└────────────────────────────────────────────────────┘
+```
+
+**In one sentence:** Control Tower builds the foundation, Landing Zone is the result, and Account Vending (via JIRA) is how teams get new accounts without waiting.
 
 ---
 
