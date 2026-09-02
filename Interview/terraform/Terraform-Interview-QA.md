@@ -1209,6 +1209,57 @@ They complement each other, not compete. Terraform can't run business logic insi
 
 ---
 
+### Q55: How do you manage a scenario where US users go to one deployment and Australian users go to a different one?
+
+**Project Reference:** P8 (Multi-Region), P2 (Route53)
+
+**Answer:**
+
+> "**Route53 Geolocation Routing** (or Latency-based Routing).
+>
+> **Geolocation routing:**
+> - US users → DNS resolves to US deployment (us-east-1 ALB)
+> - Australian users → DNS resolves to Australian deployment (ap-southeast-2 ALB)
+> - Rules based on geographic location of the DNS resolver
+>
+> ```
+> Route53 Record: app.example.com
+> ├── Geolocation: North America → ALB-us-east-1
+> ├── Geolocation: Oceania → ALB-ap-southeast-2
+> └── Geolocation: Default → ALB-us-east-1 (fallback)
+> ```
+>
+> **Alternative: Latency-based routing:**
+> - Route53 automatically sends users to the region with lowest latency
+> - Don't need to define geographic rules — AWS measures latency to each endpoint
+> - Better for 'best performance' use case vs 'data residency' use case
+>
+> **Implementation (Terraform):**
+> ```hcl
+> resource "aws_route53_record" "us" {
+>   zone_id        = aws_route53_zone.main.zone_id
+>   name           = "app.example.com"
+>   type           = "A"
+>   set_identifier = "us"
+>   geolocation_routing_policy {
+>     continent = "NA"
+>   }
+>   alias {
+>     name    = aws_lb.us.dns_name
+>     zone_id = aws_lb.us.zone_id
+>   }
+> }
+> ```
+>
+> **When to use which:**
+> - **Geolocation** → Data residency/compliance (EU data must stay in EU), regulatory requirements
+> - **Latency-based** → Pure performance optimization (send users to fastest region)
+> - **Failover** → DR (primary/secondary, switch only when primary is down — our P8 setup)
+>
+> **Key consideration:** Both regions need independent deployments (separate clusters, databases). For the database: Aurora Global Database gives read-local capability. Writes still go to primary region unless active-active (DynamoDB Global Tables)."
+
+---
+
 ## Summary
 
 | Section | Questions | Coverage |
@@ -1220,5 +1271,5 @@ They complement each other, not compete. Terraform can't run business logic insi
 | 5. Comparison & Decisions | Q31–Q37 (7 questions) | Tool choices, architecture decisions, state boundaries |
 | 6. Behavioral & Leadership | Q38–Q43 (6 questions) | Adoption, resistance, incidents, mentoring |
 | 7. Future & Improvements | Q44–Q48 (5 questions) | Roadmap, tech debt, AI, industry trends |
-| 8. Additional (Gap Coverage) | Q49–Q54 (6 questions) | taint vs destroy, secrets, long-term IaC, -target, version mgmt, Python+TF |
-| **TOTAL** | **54 questions** | **~3 hours review time** |
+| 8. Additional (Gap Coverage) | Q49–Q55 (7 questions) | taint vs destroy, secrets, long-term IaC, -target, version mgmt, Python+TF, geo/latency routing |
+| **TOTAL** | **55 questions** | **~3 hours review time** |
