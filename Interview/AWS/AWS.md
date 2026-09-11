@@ -20,39 +20,95 @@
 
 **Answer:**
 
-> "Here's the architecture I'd design:
+> "Here's the architecture I'd design — same edge/load-balancing spine as my 3-tier project (P2), evolved to EKS microservices and multi-region data for international scale.
 >
-> **Frontend/CDN Layer:**
-> - CloudFront (global CDN) — static assets cached at 400+ edge locations worldwide. International users get <50ms response for static content.
-> - Route53 — latency-based routing to nearest regional deployment. Geo-restriction if needed.
-> - S3 — static website hosting (React/Angular SPA).
+> **Architecture Diagram:**
 >
-> **Application Layer:**
-> - EKS (Kubernetes) — microservices: product catalog, cart, orders, payments, inventory, notifications. Each scales independently.
-> - ALB + WAF — L7 load balancing with DDoS and bot protection.
-> - API Gateway — for external partner APIs, rate limiting, API key management.
+> ```
+>                     ┌─────────────┐
+>                     │   Route 53  │  Latency-based routing → nearest region
+>                     └──────┬──────┘
+>                            │
+>                     ┌──────▼──────┐
+>                     │ CloudFront  │  Global CDN (static assets at edge)
+>                     └──────┬──────┘
+>                            │
+>                     ┌──────▼──────┐
+>                     │   AWS WAF   │  SQLi / XSS / rate limiting
+>                     └──────┬──────┘
+>                            │
+>               ┌────────────▼────────────┐
+>               │           ALB           │  L7 load balancing (3 AZs)
+>               └────────────┬────────────┘
+>                            │
+>               ┌────────────▼────────────┐
+>               │   EKS (Microservices)   │  catalog · cart · orders · payments
+>               │   Auto-scales per svc   │  (stateless → scale horizontally)
+>               └───┬───────────┬─────────┘
+>                   │           │
+>           ┌───────▼──┐   ┌────▼─────────┐   ┌──────────────┐
+>           │ElastiCache│   │ Aurora Global│   │  SQS (async  │
+>           │  (Redis)  │   │   Database   │   │ order queue) │
+>           │  cache    │   │ primary +    │   └──────────────┘
+>           └───────────┘   │ cross-region │
+>                           │ read replicas│
+>           ┌───────────────▼──────────────┐
+>           │  DynamoDB Global Tables       │  cart (active-active, multi-region)
+>           └───────────────────────────────┘
+>           ┌───────────────────────────────┐
+>           │  S3 — product images / uploads │
+>           └───────────────────────────────┘
+> ```
 >
-> **Data Layer:**
-> - Aurora Global Database — primary in us-east-1, read replicas in eu-west-1 and ap-southeast-1 for low-latency reads. <1s cross-region replication.
-> - ElastiCache (Redis) — session store + product catalog cache. Reduces DB load by 80%.
-> - DynamoDB Global Tables — cart data (active-active multi-region, no failover needed).
-> - S3 — product images, user uploads, order documents.
+> **Edge (global reach):** Route53 uses latency-based routing to send each user to the nearest region. CloudFront caches static content at edge locations worldwide, so international users get fast load times. WAF blocks SQL injection, XSS, and abusive traffic before it reaches the app.
 >
-> **Async/Event Layer:**
-> - SQS — order processing queue (decouple order placement from fulfillment).
-> - EventBridge — event-driven: 'order placed' triggers inventory update, notification, analytics.
-> - Lambda — lightweight processing (email notifications, image resizing).
+> **Compute (scalable):** ALB distributes traffic across EKS microservices — catalog, cart, orders, payments — each scaling independently. During flash sales, only the services under load scale up. Stateless compute means easy horizontal scaling.
 >
-> **Security:**
-> - WAF + Shield Advanced — DDoS protection for e-commerce (peak traffic during sales).
-> - ACM certificates, mTLS between services (Istio).
-> - Secrets Manager for DB credentials, API keys.
+> **Data (robust + international):**
+> - **Aurora Global Database** — primary region for writes, cross-region read replicas for low-latency reads and DR (sub-second replication). Strong consistency for orders/payments.
+> - **ElastiCache (Redis)** — caches sessions and the product catalog, cutting DB load significantly.
+> - **DynamoDB Global Tables** — the shopping cart, replicated active-active across regions so a user never loses their cart even if a region fails.
+> - **S3** — product images and user uploads.
+>
+> **Async (resilient):** SQS decouples order placement from fulfillment — the checkout page returns instantly while order processing happens in the background.
 >
 > **Key design decisions:**
-> - Stateless compute → easy horizontal scaling during flash sales
-> - Async processing → order page returns fast, fulfillment happens in background
-> - Multi-region with DynamoDB Global Tables for cart → user never loses their cart regardless of region
-> - Aurora Global DB for orders → strong consistency for financial transactions"
+> - Stateless compute → horizontal scaling during peak sales
+> - Aurora Global DB → strong consistency for money, low-latency reads globally
+> - DynamoDB Global Tables for cart → survives a full region outage
+> - SQS async → fast checkout, background fulfillment"
+
+**Optional add-ons (mention only if asked):**
+- **DDoS at scale** → AWS Shield Advanced (on top of WAF)
+- **External partner APIs** → API Gateway (rate limiting, API keys)
+- **Event fan-out** (order → inventory + notification + analytics) → EventBridge + Lambda
+- **Service-to-service security** → Istio mTLS
+
+---
+
+### Q: What is the difference between a monolith and microservices?
+
+**Project Reference:** P1 (microservices), P3 (Kubernetes platform)
+
+**Answer:**
+
+> "**Monolith** — the entire application is built and deployed as one single unit. All features (UI, business logic, data access) live in one codebase and run as one process.
+>
+> **Microservices** — the application is split into small, independent services, each owning one business capability (catalog, cart, orders, payments). Each runs, scales, and deploys separately, communicating over APIs.
+>
+> | Aspect | Monolith | Microservices |
+> |---|---|---|
+> | Deployment | One unit — redeploy everything for any change | Deploy each service independently |
+> | Scaling | Scale the whole app | Scale only the service under load |
+> | Tech stack | One shared stack | Each service can use its own language/DB |
+> | Failure blast radius | A bug can crash the whole app | Failure isolated to one service |
+> | Data | Usually one shared database | Database per service |
+> | Complexity | Simple to start, harder at scale | Operationally complex (needs CI/CD, monitoring, service mesh) |
+> | Team fit | Small teams | Large teams (each owns a service) |
+>
+> **Analogy:** A monolith is one big store where everything happens under one roof — if it closes, everything stops. Microservices are like a mall of specialized shops — one can close for renovation while the rest stay open.
+>
+> **Rule of thumb:** Start with a monolith, then split into microservices when you feel the pain — deployment bottlenecks, team conflicts, or uneven scaling needs."
 
 ---
 
