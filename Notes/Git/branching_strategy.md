@@ -17,8 +17,8 @@ This shows exactly how an 18-stage DevSecOps pipeline maps to each branch in Git
 │                                                                             │
 │  BRANCHES:          WHAT PIPELINE RUNS:              DEPLOYS TO:            │
 │                                                                             │
-│  feature/*    →     Phase 1 (Build)              →   Nowhere               │
-│  develop      →     Phase 1 + Phase 2            →   DEV environment       │
+│  feature/*    →     Phase 1 (Build)              →   Nowhere (opt. ephemeral)│
+│  develop      →     Phase 1 + Phase 2            →   TEST environment      │
 │  release/*    →     Phase 1 + Phase 2 + Partial 3→   STAGING environment   │
 │  main         →     Phase 1 + Phase 2 + Full 3   →   PRODUCTION (canary)   │
 │  hotfix/*     →     Phase 1 + Phase 2 + Fast 3   →   PRODUCTION (fast)     │
@@ -46,7 +46,7 @@ PHASE 2 (PACKAGE):
 PHASE 3 (DEPLOY):
 ┌─────────┐ ┌─────────┐ ┌─────────┐ ┌─────────┐ ┌─────────┐
 │ Deploy  │→│ DAST +  │→│Promote  │→│ Manual  │→│ Deploy  │
-│  DEV    │ │ Smoke   │ │STAGING  │ │Approval │ │  PROD   │
+│  TEST   │ │ Smoke   │ │STAGING  │ │Approval │ │  PROD   │
 └─────────┘ └─────────┘ └─────────┘ └─────────┘ └─────────┘
                                                        │
                                                        ▼
@@ -103,6 +103,10 @@ feature/wishlist push
 - It's just a feature branch — no need to build a Docker image yet
 - We only care: Is the code secure? Does it pass tests? Is it quality?
 - Fast feedback (2-5 minutes) while developer is still working
+- 🚫 We do NOT deploy feature branches to a shared lower environment —
+  concurrent feature branches would overwrite each other. If you need a
+  running preview, spin up an **ephemeral/preview environment** per branch
+  (or per PR) and tear it down on merge.
 
 **Result shown in Merge Request:**
 
@@ -139,7 +143,7 @@ develop branch updated
          │
          ▼
 ┌─────────────────────────────────────────────────────────────────────────┐
-│ PIPELINE FOR develop — PHASE 1 + PHASE 2 + DEPLOY TO DEV               │
+│ PIPELINE FOR develop — PHASE 1 + PHASE 2 + DEPLOY TO TEST              │
 │                                                                          │
 │ PHASE 1 (Build):                                                        │
 │ ┌────────┐ ┌────────┐ ┌────────┐ ┌────────┐ ┌────────┐               │
@@ -155,8 +159,8 @@ develop branch updated
 │                                                   │ ✅                  │
 │ PHASE 3 (Partial):                                ▼                     │
 │ ┌─────────────────┐ ┌─────────────────┐                               │
-│ │ Deploy to DEV   │→│ DAST + Smoke    │                               │
-│ │ dev.myshop.com  │ │ Tests on DEV    │                               │
+│ │ Deploy to TEST  │→│ DAST + Smoke    │                               │
+│ │ test.myshop.com │ │ Tests on TEST   │                               │
 │ └─────────────────┘ └─────────────────┘                               │
 │                                                                          │
 │ 🚫 NO staging deployment                                               │
@@ -168,11 +172,11 @@ develop branch updated
 **Why Phase 1 + 2 + partial 3?**
 - Code is now integrated with other features — need full security scan
 - Build the Docker image now so it's ready to promote later
-- Deploy to DEV so team can see all features working together
-- Run DAST against DEV to find runtime security issues early
+- Deploy to TEST so team can see all features working together
+- Run DAST against TEST to find runtime security issues early
 
 **Result:**
-- `dev.myshop.com` now has the wishlist feature
+- `test.myshop.com` now has the wishlist feature
 - A signed Docker image `myshop:build-247` exists in the registry
 - Security reports uploaded to S3
 
@@ -212,7 +216,7 @@ release/2.0 branch created
 │ PHASE 3 (Up to Staging):                         ▼                     │
 │ ┌────────────┐ ┌──────────────┐ ┌─────────────────────┐               │
 │ │ Deploy to  │→│ DAST + Smoke │→│ Promote to STAGING  │               │
-│ │    DEV     │ │  Tests       │ │ staging.myshop.com  │               │
+│ │    TEST    │ │  Tests       │ │ staging.myshop.com  │               │
 │ └────────────┘ └──────────────┘ └─────────────────────┘               │
 │                                                                          │
 │ 🚫 NO manual approval (QA needs to test first)                         │
@@ -274,7 +278,7 @@ main branch updated
 │ PHASE 3 (Full Deploy):                           ▼                     │
 │ ┌────────────┐ ┌──────────────┐ ┌────────────────┐ ┌───────────────┐ │
 │ │ Deploy to  │→│ DAST + Smoke │→│ Promote to     │→│   MANUAL      │ │
-│ │    DEV     │ │  Tests       │ │   STAGING      │ │  APPROVAL     │ │
+│ │    TEST    │ │  Tests       │ │   STAGING      │ │  APPROVAL     │ │
 │ └────────────┘ └──────────────┘ └────────────────┘ └───────┬───────┘ │
 │                                                             │ 👤       │
 │                                                             ▼ Approved │
@@ -337,16 +341,16 @@ hotfix/* push
 │                                                   │ ✅                  │
 │ PHASE 3 (SHORTENED — Skip staging, fast canary): ▼                     │
 │ ┌────────────┐ ┌──────────────┐ ┌───────────────┐ ┌────────────────┐ │
-│ │ Deploy to  │→│ DAST + Smoke │→│    MANUAL     │→│ FAST CANARY    │ │
-│ │    DEV     │ │ (quick only) │ │   APPROVAL    │ │ to PRODUCTION  │ │
-│ └────────────┘ └──────────────┘ │ (auto-approve │ │                │ │
-│                                  │  after 15min) │ │ 20%→50%→100%  │ │
-│                                  └───────────────┘ │ (skip 5%)     │ │
-│                                                     └────────────────┘ │
+│ │ Deploy to  │→│ DAST + Smoke │→│  LIGHTWEIGHT  │→│ FAST CANARY    │ │
+│ │    TEST    │ │ (quick only) │ │    MANUAL     │ │ to PRODUCTION  │ │
+│ └────────────┘ └──────────────┘ │   APPROVAL    │ │                │ │
+│                                  │ (fast 1-click │ │ 20%→50%→100%  │ │
+│                                  │  human "go")  │ │ (skip 5%)     │ │
+│                                  └───────────────┘ └────────────────┘ │
 │                                                                          │
 │ 🚫 SKIPS staging (too slow for emergencies)                            │
 │ ⚡ Faster canary (fewer steps, shorter wait)                            │
-│ ⏰ Auto-approve after 15 minutes if no rejection                       │
+│ 👤 Keep a human "go" — a fast, single-click approval (never auto)      │
 └─────────────────────────────────────────────────────────────────────────┘
 ```
 
@@ -354,6 +358,8 @@ hotfix/* push
 - Production is broken NOW — users are affected
 - We still run ALL security scans (never skip security)
 - But we skip staging and speed up the canary
+- We still require a human "go" — just a fast, single-click approval rather
+  than the full release-manager sign-off (never fully automated for prod)
 - The trade-off: slightly more risk for much faster recovery
 
 **After hotfix is deployed, you merge it back:**
@@ -387,8 +393,8 @@ feature/wishlist created
   ▼
 Merge to develop
   │
-  ├─ [Phase 1 + 2 + Deploy DEV] ✅
-  │   └─ dev.myshop.com updated
+  ├─ [Phase 1 + 2 + Deploy TEST] ✅
+  │   └─ test.myshop.com updated
   │
   ▼
 Create release/2.0
@@ -405,7 +411,7 @@ Merge to main
   ├─ [FULL PIPELINE - All 18 stages]
   │   ├─ Phase 1 ✅
   │   ├─ Phase 2 ✅
-  │   ├─ Deploy DEV ✅
+  │   ├─ Deploy TEST ✅
   │   ├─ DAST ✅
   │   ├─ Promote Staging ✅
   │   ├─ Manual Approval ✅ (release manager clicks approve)
@@ -419,13 +425,13 @@ www.myshop.com has wishlist feature! 🎉
 
 ### Summary Table
 
-| Branch | Phase 1 | Phase 2 | DEV | DAST | STAGING | Approval | PROD Canary |
+| Branch | Phase 1 | Phase 2 | TEST | DAST | STAGING | Approval | PROD Canary |
 |--------|---------|---------|-----|------|---------|----------|-------------|
 | `feature/*` | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
 | `develop` | ✅ | ✅ | ✅ | ✅ | ❌ | ❌ | ❌ |
 | `release/*` | ✅ | ✅ | ✅ | ✅ | ✅ | ❌ | ❌ |
 | `main` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ (slow) |
-| `hotfix/*` | ✅ | ✅ | ✅ | ⚡quick | ❌ | ⚡auto | ✅ (fast) |
+| `hotfix/*` | ✅ | ✅ | ✅ | ⚡quick | ❌ | 👤 1-click | ✅ (fast) |
 
 **The rule:** The closer you get to production, the more gates you pass through. Security scans run EVERYWHERE — deployment gates increase as you move right.
 
