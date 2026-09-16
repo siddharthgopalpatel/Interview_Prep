@@ -532,6 +532,85 @@ privileged — full access (only for infra components)
 5. **Verify after** — kubectl get nodes, DaemonSets, HPA, Ingress all working
 6. **PDB in place** — ensures app availability during node drain
 
+### Self-Managed (kubeadm) Upgrade — Step by Step
+
+**Key rule:** Upgrade one minor version at a time (e.g., 1.23 → 1.24, never 1.23 → 1.25 directly). Order is always **control plane first, then workers**.
+
+**Phase 1 — Control Plane (Master):**
+- Check available versions: `apt update && apt-cache madison kubeadm`
+- Upgrade kubeadm binary first:
+  - `apt-mark unhold kubeadm`
+  - `apt-get install -y kubeadm=1.24.x-00`
+  - `apt-mark hold kubeadm`
+- Verify: `kubeadm version`
+- Run the upgrade plan (shows what will change): `kubeadm upgrade plan`
+- Apply the upgrade: `sudo kubeadm upgrade apply v1.24.x`
+  - Upgrades control plane components (API server, controller-manager, scheduler, etcd) by rewriting static pod manifests in `/etc/kubernetes/manifests/`
+  - Kubelet detects new manifests and restarts static pods with new images
+  - Renews certs automatically
+- Drain the master node: `kubectl drain <master> --ignore-daemonsets`
+- Upgrade kubelet + kubectl on master:
+  - `apt-mark unhold kubelet kubectl`
+  - `apt-get install -y kubelet=1.24.x-00 kubectl=1.24.x-00`
+  - `apt-mark hold kubelet kubectl`
+- Restart kubelet: `sudo systemctl daemon-reload && sudo systemctl restart kubelet`
+- Uncordon: `kubectl uncordon <master>`
+
+**Phase 2 — Worker Nodes (one at a time):**
+- On each worker, upgrade kubeadm: `apt-mark unhold kubeadm && apt-get install -y kubeadm=1.24.x-00 && apt-mark hold kubeadm`
+- Upgrade node config: `sudo kubeadm upgrade node`
+- From master, drain the worker: `kubectl drain <worker> --ignore-daemonsets --delete-emptydir-data`
+- Upgrade kubelet + kubectl on the worker (unhold → install → hold)
+- Restart kubelet: `sudo systemctl daemon-reload && sudo systemctl restart kubelet`
+- Uncordon from master: `kubectl uncordon <worker>`
+- Repeat for the next worker only after the current one is `Ready`
+
+**Verify:**
+- `kubectl get nodes` → all nodes `Ready` on the new version
+- `kubectl get pods -A` → all system pods running
+- Check CNI (Calico) pods are healthy: `kubectl get pods -n kube-system | grep calico`
+
+### Rollback Plan
+
+**Important reality:** kubeadm does not officially support downgrading the control plane after `upgrade apply`. Rollback is best-effort and safest when you have backups. Plan for it **before** upgrading.
+
+**Before you upgrade (prerequisites for rollback):**
+- Back up etcd (your real safety net):
+  ```
+  ETCDCTL_API=3 etcdctl snapshot save /backup/etcd-snapshot.db \
+    --endpoints=https://127.0.0.1:2379 \
+    --cacert=/etc/kubernetes/pki/etcd/ca.crt \
+    --cert=/etc/kubernetes/pki/etcd/server.crt \
+    --key=/etc/kubernetes/pki/etcd/server.key
+  ```
+- Back up `/etc/kubernetes/` (manifests, pki, kubeconfigs): `cp -r /etc/kubernetes /backup/kubernetes-<version>`
+- Note the current working version (1.23.4).
+
+**If an upgrade fails mid-way (before `upgrade apply` completes):**
+- kubeadm rolls back automatically — static pod manifests are restored from backup in `/etc/kubernetes/tmp/`.
+- No action usually needed; re-check `kubectl get nodes`.
+
+**If you need to roll back after a successful upgrade:**
+- Downgrade kubeadm binary: `apt-mark unhold kubeadm && apt-get install -y kubeadm=1.23.4-00 && apt-mark hold kubeadm`
+- Restore etcd from snapshot (move apiserver + etcd static pod manifests out first, restore, move back):
+  - `ETCDCTL_API=3 etcdctl snapshot restore /backup/etcd-snapshot.db`
+- Restore `/etc/kubernetes/` from your backup directory.
+- Downgrade kubelet + kubectl to 1.23.4 on each node (unhold → install → hold → restart kubelet).
+- Restart kubelet everywhere: `systemctl daemon-reload && systemctl restart kubelet`
+- Verify: `kubectl get nodes` shows old version and `Ready`.
+
+**Worker-only rollback (simpler):**
+- Workers hold no cluster state, so downgrade is safer:
+  - `kubectl drain <worker>` → downgrade kubelet/kubeadm → restart kubelet → `kubectl uncordon <worker>`
+
+### Key Insights (Interview-Ready)
+
+- Always upgrade sequentially by minor version; skipping versions is unsupported.
+- Order matters: **control plane → workers**, one node at a time to keep the cluster available.
+- Drain before upgrading kubelet so workloads reschedule gracefully.
+- **etcd backup is the true rollback mechanism** — control-plane downgrade isn't officially supported, so a snapshot is what actually saves you.
+- Just like `kubeadm init` doesn't set up pod networking, an upgrade doesn't touch your CNI — verify Calico separately after upgrading.
+
 ---
 
 ## 13. Cost Comparison

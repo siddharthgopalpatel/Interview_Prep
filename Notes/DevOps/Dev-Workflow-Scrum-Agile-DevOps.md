@@ -1421,6 +1421,43 @@ Dashboard:
 
 ---
 
+---
+
+## Part 14.5: How a New Feature / Enhancement Flows Through Scrum
+
+### Interview Question: "How does a new feature or enhancement work in Scrum (Agile process)? Explain in brief."
+
+**The lifecycle — from idea to production:**
+
+```
+Backlog → Refinement → Sprint Planning → Development → Review & Merge
+   → CI/CD Deploy → Sprint Review (demo) → Retrospective → Feedback loop
+```
+
+**1. Backlog & Refinement**
+The feature starts as an epic or user story in the product backlog, written by the Product Owner as *"As a user, I want X so that Y."* In backlog refinement (grooming), we break it into smaller stories, add acceptance criteria, and estimate effort in story points.
+
+**2. Sprint Planning**
+At the start of the sprint (2 weeks for us), the team pulls prioritized stories into the sprint based on capacity. The story becomes a Jira ticket — e.g. IPCC-234.
+
+**3. Development**
+The developer creates a feature branch tied to the ticket — `feature/IPCC-234-skill-based-routing` — writes code, and opens a PR. CI runs tests, security scans, and quality gates automatically.
+
+**4. Review & Merge**
+After peer code review and passing all gates, it merges to `main`. The CD pipeline deploys — staging first, then production via canary rollout.
+
+**5. Daily Standup**
+Throughout the sprint we sync daily: what I did, what I'm doing, blockers.
+
+**6. Sprint Review & Retrospective**
+At the end, we demo the completed feature to stakeholders in the Sprint Review, gather feedback, and in the Retrospective discuss what to improve. Feedback becomes new backlog items for the next sprint.
+
+### Interview One-Liner
+
+> "A feature flows as: Backlog → Refine → Sprint Planning → build on a feature branch → pipeline tests and deploys → demo in Sprint Review → feedback → next sprint. It's iterative — each sprint the feature gets refined and improved. As the DevOps engineer, my value-add sits in step 3–4: the branch, the CI/CD gates, and the canary rollout that ships it safely."
+
+---
+
 ## Part 15: Putting It All Together — The Complete Mental Model
 
 ### One Picture to Remember Everything
