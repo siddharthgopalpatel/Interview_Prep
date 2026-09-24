@@ -4,9 +4,9 @@ A single consolidated collection of 79 Linux interview Q&A. Answers are **brief*
 
 ## Contents (by topic)
 
-- **Fundamentals** — Q1, Q2, Q30, Q56, Q57
+- **Fundamentals** — Q1, Q2, Q30
 - **Commands & CLI** — Q4, Q5, Q58, Q59, Q60
-- **Filesystem & Storage** — Q3, Q16, Q17, Q18, Q61, Q62
+- **Filesystem & Storage** — Q3, Q16, Q18, Q61, Q62
 - **Permissions & Ownership** — Q7, Q8, Q9, Q63, Q64
 - **Processes & Signals** — Q6, Q10, Q11, Q12, Q65
 - **Memory Management** — Q13, Q14, Q15, Q66, Q67
@@ -65,11 +65,7 @@ A single consolidated collection of 79 Linux interview Q&A. Answers are **brief*
 
 **One-liner for interview:** "Linux is the open-source kernel; a distribution is the kernel plus the tools around it that make a usable OS."
 
----
-
-## Q2. Difference between Linux Kernel and Linux Distribution?
-
-**Short answer:** The **kernel** is the core engine that manages hardware. A **distribution** is the complete, usable OS = kernel + system libraries + package manager + utilities + (often) a desktop.
+**Kernel vs Distribution — side by side:**
 
 | Aspect | Linux Kernel | Linux Distribution |
 |--------|--------------|--------------------|
@@ -87,7 +83,15 @@ A single consolidated collection of 79 Linux interview Q&A. Answers are **brief*
    Distro  ──►  engine + body + wheels + controls  (ready to drive)
 ```
 
-**Interview tip:** Say that distributions **package the kernel together with system libraries, a package manager, and utilities** to provide a usable operating system. Many distros share the *same* kernel but differ in package manager (apt vs yum), release cycle, and defaults.
+**Interview tip:** Distributions **package the kernel together with system libraries, a package manager, and utilities** to provide a usable operating system. Many distros share the *same* kernel but differ in package manager (apt vs yum), release cycle, and defaults.
+
+---
+
+## Q2. Difference between Linux Kernel and Linux Distribution?
+
+> Merged into **Q1** (see the "Kernel vs Distribution — side by side" table and car analogy there). Kept as a numbered placeholder so later cross-references (e.g., Q30) stay valid.
+
+**In one line:** the **kernel** is the core engine that manages hardware; a **distribution** is the complete usable OS = kernel + libraries + package manager + utilities. See **Q1** for the full comparison.
 
 ---
 
@@ -121,63 +125,6 @@ You type: ls
        ▼
    SHELL prints output on your terminal
 ```
-
-**The boundary (the point being tested):**
-- Shell = **interface / interpreter** — parses commands, handles pipes, redirects, variables, scripts.
-- Kernel = **the engine** — actually runs programs and touches hardware. Anything privileged goes through it.
-
-**Strong answer to say:** *"The kernel is the OS core — it manages CPU, memory, and devices. The shell is my interface; it parses commands and launches programs, but the kernel does the real work of running them and accessing hardware."*
-
-**Interview tip:** Keep the roles crisp — **shell reads your typing, kernel runs the hardware.** The shell can't touch hardware directly; it must go through the kernel via **system calls**.
-
----
-
-## Q56. Monolithic vs microkernel — and why is Linux monolithic (with modules)?
-
-**Short answer:** A **monolithic** kernel runs all core services (drivers, filesystems, networking) in one address space (kernel space) — fast, but a bad driver can crash the kernel. A **microkernel** keeps only the bare minimum in kernel space and runs drivers/filesystems as user-space services — safer/isolated, but slower due to message-passing. Linux is **monolithic but modular**: it loads/unloads drivers as **kernel modules** at runtime, getting flexibility without a full microkernel's overhead.
-
-| | Monolithic (Linux) | Microkernel |
-|--|--------------------|-------------|
-| Drivers/FS | In kernel space | User space services |
-| Speed | Fast (direct calls) | Slower (IPC messaging) |
-| Fault isolation | Weaker (driver can crash kernel) | Strong (service crash ≠ kernel crash) |
-| Examples | Linux | Minix, QNX, seL4 |
-
-```
-Loadable Kernel Modules (best of both):
-  lsmod            → list loaded modules
-  modprobe nvme    → load a driver on demand
-  rmmod / modprobe -r → unload
-  → add hardware support without recompiling/rebooting the kernel
-```
-
-**Interview tip:** The nuance that scores — *"Linux is monolithic for speed but modular via loadable kernel modules, so it gets runtime flexibility without a microkernel's IPC cost."*
-
----
-
-## Q57. What is a system call (and user space vs kernel space)?
-
-**Short answer:** A **system call (syscall)** is the controlled entry point a user program uses to ask the kernel to do something privileged — read a file, open a socket, fork a process. It's the **boundary** between unprivileged **user space** and privileged **kernel space**.
-
-```
-  USER SPACE (unprivileged)                KERNEL SPACE (privileged)
-  ┌───────────────────┐                    ┌────────────────────────┐
-  │ your app: open()  │  ── syscall ──►     │ kernel checks perms,   │
-  │ (via glibc)       │  (mode switch)      │ does the disk I/O      │
-  │                   │  ◄── return ──      │ returns fd / error     │
-  └───────────────────┘                    └────────────────────────┘
-     cannot touch hardware directly            only kernel can
-```
-
-**Why it exists:** hardware access must be mediated for **security and stability** — apps can't touch disks/memory/devices directly. Common syscalls: `read`, `write`, `open`, `fork`, `execve`, `mmap`, `socket`.
-
-**See them in action:**
-```
-strace -c ls        # count syscalls a command makes
-strace -p <PID>     # trace a running process's syscalls live (great for "stuck" debugging)
-```
-
-**Interview tip:** Connect it to Q30 — the shell/app runs in user space and must cross into kernel space via a syscall for anything privileged. Mention `strace` for debugging a hung process (see exactly which syscall it's blocked on, e.g., a `read` on a dead socket).
 
 ---
 
@@ -235,17 +182,6 @@ find   →  "where are the .log files, live right now?" → find /var -name "*.l
 locate →  "where is nginx.conf?" (instant, from index) → locate nginx.conf
 ```
 
-**Examples:**
-- `grep -ri "timeout" /etc/`  → find config files that contain "timeout"
-- `find / -type f -size +100M`  → find files larger than 100 MB
-- `find /var/log -mtime +7 -delete`  → delete logs older than 7 days
-- `locate passwd`  → instantly list paths with "passwd" (run `sudo updatedb` first if new files are missing)
-
-**When to use which:**
-- Need file **content** → `grep`
-- Need to search by **attributes** (size, time, permissions) or act on results → `find`
-- Just need a file's **path quickly** and it's not brand new → `locate`
-
 **Interview tip:** Key line — *"`find` is real-time but slow; `locate` is instant but relies on a database that may be outdated; `grep` is different entirely — it searches inside files, not for them."*
 
 ---
@@ -272,10 +208,6 @@ stdin 0 ─►  process   ─► stdout 1
 | `cmd1 \| cmd2` | cmd1 stdout → cmd2 stdin |
 | `\| tee file` | pipe through AND save a copy to file |
 
-**Key gotcha (order matters):** `> file 2>&1` works, but `2>&1 > file` does **not** send stderr to the file — redirections are evaluated left to right, so `2>&1` points stderr at the *current* stdout (terminal) before stdout is redirected.
-
-**Interview tip:** Nail `2>&1` and its ordering, and mention `tee` for "log to file *and* see it live" (e.g., `deploy.sh 2>&1 | tee deploy.log`). `/dev/null` to discard: `cmd 2>/dev/null`.
-
 ---
 
 ## Q59. Text processing: sed, awk, cut — when to use which?
@@ -287,16 +219,6 @@ stdin 0 ─►  process   ─► stdout 1
 | `cut` | Simple field/column extraction | `cut -d: -f1 /etc/passwd` (usernames) |
 | `sed` | Find/replace, delete/print lines | `sed 's/old/new/g' file` |
 | `awk` | Columns + conditions + math | `awk '{sum+=$3} END{print sum}'` |
-
-```
-# Top 5 IPs hitting nginx (classic one-liner):
-awk '{print $1}' access.log | sort | uniq -c | sort -rn | head -5
-
-sed -i 's/DEBUG/INFO/g' app.conf      # in-place replace
-awk -F, '$3 > 100 {print $1}' data.csv # rows where col3 > 100
-```
-
-**Rule of thumb:** whitespace/columns + logic → `awk`; substitution/line surgery → `sed`; a fixed delimiter, one field → `cut` (simplest, fastest).
 
 **Interview tip:** Show the log-analysis `awk | sort | uniq -c | sort -rn` pipeline — it's a daily DevOps move. Mention `sed -i` edits in place (great in automation, but back up first).
 
@@ -314,15 +236,6 @@ find /tmp -name '*.tmp' -mtime +7 -exec rm {} +
 # xargs from a pipe:
 grep -rl "TODO" . | xargs sed -i 's/TODO/DONE/g'
 ```
-
-**Safety with spaces/newlines (the senior detail):**
-```
-find . -name '*.log' -print0 | xargs -0 rm      # -print0 + -0 handle spaces safely
-xargs -P 4 ...                                   # run 4 in parallel
-xargs -n 1 ...                                   # one argument per invocation
-```
-
-**`-exec {} +` vs `\;`:** `+` batches many args into few calls (fast); `\;` runs once per file (slower, but needed when the command takes exactly one arg).
 
 **Interview tip:** The gotcha that matters — filenames with spaces break naive `xargs`; use `find -print0 | xargs -0`. Mention `xargs -P` for parallelism (e.g., process 1000 files across cores).
 
@@ -417,20 +330,7 @@ repeat du into subdirs    ─►  find the huge file/folder  ─►  clean up / 
 
 ## Q17. Difference between df and du?
 
-> This is the comparison already built into Q16 — kept as its own entry because it's often asked directly. Full details, outputs, and workflow are in **Q16**.
-
-**One-liner:** `df` reports **free/used space per filesystem (mount)**; `du` reports **space consumed by files/directories**.
-
-| | df | du |
-|--|----|----|
-| Scope | Whole filesystem / mount | Specific files & directories |
-| Reads from | Filesystem metadata (fast) | Walks and sums files (slower) |
-| Answers | *"Is the disk full?"* | *"What is filling it?"* |
-| Example | `df -h` | `du -sh /var/* \| sort -h` |
-
-**Gotcha:** `df` and `du` can **disagree**. If `df` shows a disk full but `du` totals much less, a process is likely holding a **deleted-but-open** file — the space isn't released until that process closes/restarts (`lsof | grep deleted`).
-
-**Interview tip:** *"`df` = filesystem view, `du` = directory view — I use `df -h` to spot the full mount, then `du` to drill into what's eating it."* (See Q16 for the full disk-full workflow.)
+> Merged into **Q16** — the `df` vs `du` comparison, gotcha, and workflow all live there. Kept as a numbered placeholder so cross-references stay valid. See **Q16**.
 
 ---
 
@@ -479,18 +379,6 @@ Symlink (points to a path):
    linkname ─► "/path/to/target" ─► (its own inode) ─► inode 1234 ─► data
               (if target is renamed/deleted → dangling link)
 ```
-
-| | Hard link | Symlink (soft) |
-|--|-----------|----------------|
-| Points to | The inode directly | A path/name |
-| Across filesystems? | No (same FS only) | Yes |
-| Link to a directory? | No (usually) | Yes |
-| If target deleted | Data survives (until link count 0) | Link breaks (dangling) |
-| Create | `ln target link` | `ln -s target link` |
-
-**Why it matters:** ties directly to Q27 — deleting a file only removes a *name*; data frees only when the inode's link count (and open FDs) hit zero. Check with `ls -li` (shows inode + link count) and `stat file`.
-
-**Interview tip:** Key line — *"a hard link shares the inode (same data), a symlink stores a path (breaks if the target moves)."* Mention `ls -li` to see inode numbers and link counts. Symlinks are what you use for versioned deploys (`current -> releases/v42`).
 
 ---
 
@@ -2411,7 +2299,7 @@ App down, server reachable
 
 ## Q27. (Scenario) "No space left on device" but deleting large logs didn't free space. Why?
 
-> The **deleted-but-open file** case (also referenced in Q16/Q17). Here the focus is the *why* and the *fix procedure*.
+> The **deleted-but-open file** case (also referenced in Q16). Here the focus is the *why* and the *fix procedure*.
 
 **Short answer:** A **running process still has the deleted file open**. On Linux, deleting a file only removes its **directory entry (name)** — the actual data blocks are freed only when the **last file descriptor** referring to them is closed. So the process keeps writing/holding the space even though the file "doesn't exist."
 
@@ -2426,7 +2314,7 @@ Open-file delete: name ──► inode ──► data blocks
                  until the process closes it / exits  ✗  (df still shows full)
 ```
 
-This is exactly why `df` (says full) and `du` (says less) **disagree** — see Q17.
+This is exactly why `df` (says full) and `du` (says less) **disagree** — see Q16.
 
 **How to find and fix it:**
 ```
